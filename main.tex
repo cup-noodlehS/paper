@@ -1,0 +1,126 @@
+\documentclass[12pt]{report}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{csquotes}
+\usepackage[style=apa,backend=biber]{biblatex}
+
+\addbibresource{refs.bib}
+
+\setstretch{2}
+
+\begin{document}
+
+% Title page
+\begin{titlepage}
+  \centering
+  \includegraphics[height=100pt]{images/up_logo.png}\par
+  \vspace{1.5em}
+  \textbf{AI-Driven Traffic Violation Detection Using Multi-Object Tracking and Geometric Rules in Philippine Road Environments}\par
+  \vspace{1.5em}
+  \textbf{A Special Project Proposal Presented to the}\par
+  \textbf{Faculty of the Department of Computer Science,}\par
+  \textbf{University of the Philippines Cebu}\par
+  \vspace{1.5em}
+  \textbf{In Partial Fulfillment}\par
+  \textbf{Of the Requirements for the Degree}\par
+  \textbf{Bachelor of Science in Computer Science}\par
+  \vspace{1.5em}
+  \textbf{SHELDON ARTHUR M. SAGRADO}\par
+  BS Computer Science\par
+  \vspace{1.5em}
+  \textbf{DHARRYL PRINCE ABELLANA}\par
+  Special Problem Adviser\par
+  \vspace{1.5em}
+  \textbf{December 2025}\par
+\end{titlepage}
+
+% Approval/availability page
+\begin{titlepage}
+  \centering
+  \includegraphics[height=100pt]{images/up_logo.png}\par
+  \vspace{1.5em}
+  \textbf{UNIVERSITY OF THE PHILIPPINES CEBU}\par
+  \textbf{College of Science}\par
+  \textbf{Department of Computer Science}\par
+  \vspace{1.5em}
+  \textbf{AI-Driven Traffic Violation Detection Using Multi-Object Tracking and Geometric Rules in Philippine Road Environments}\par
+  \vspace{1.5em}
+  \textbf{Permission is given for the following people to have access to this thesis:}\par
+  \vspace{1em}
+  \begin{center}
+    \begin{tabular}{cc}
+      Available to the general public & Yes \\
+      \textbf{Available only after consultation with the author or thesis adviser} & \textbf{Yes} \\
+      \textbf{Available to those bound by a confidentiality agreement} & \textbf{Yes} \\
+    \end{tabular}
+  \end{center}
+  \vspace{1.5em}
+  \textbf{SHELDON ARTHUR M. SAGRADO}\par
+  Student\par
+  \vspace{1.5em}
+  \textbf{DHARRYL PRINCE ABELLANA}\par
+  Special Problem Adviser\par
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\chapter{THE PROBLEM AND ITS SCOPE}
+\section{Rationale}
+\section{Statement of the Problem}
+\section{Research Objectives}
+\section{Theoretical Framework}
+\section{Significance of the Study}
+\section{Scope and Delimitation}
+\section{Definition of Terms}
+
+\chapter{REVIEW OF RELATED LITERATURE}
+\section{Survey of Automated Traffic Violation Detection (ATVD)}
+\section{AI-Based Automated Traffic Violation Detection (ATVD)}
+\section{Overview of Object Detection}
+\section{Lightweight Attention-Enhanced Single-Stage Detectors in Edge Applications}
+
+\chapter{METHODOLOGY}
+\section{Research Design}
+\section{Study Setting and Camera Assumptions}
+\section{Data Acquisition and Video Collection Plan}
+\subsection{Data Sources}
+\subsection{Inclusion Criteria}
+\subsection{Data Partitioning}
+\section{System Overview}
+\section{Vehicle Detection and Classification}
+\section{Multi-Object Tracking and Fuzzy Logic Stabilization}
+\subsection{Baseline Tracker}
+\subsection{Motivation for Fuzzy Logic in Association}
+\subsection{Fuzzy-Enhanced Association and Class Stabilization}
+\section{Manual Geometric Calibration}
+\subsection{ROI Definition}
+\subsection{Homography Calibration via Reference Rectangle}
+\subsection{Ground-Contact Point Selection}
+\section{Speed Estimation and Speeding Detection}
+\subsection{Instantaneous Speed Computation}
+\subsection{Temporal Smoothing}
+\subsection{Speeding Event Rule}
+\section{Geometric Rule-Based Violation Detection}
+\subsection{Lane Misuse (Restricted Lane Violation)}
+\subsection{No-Stopping / Loading-Zone Violation}
+\subsection{Wrong-Way Driving / Counterflow}
+\subsection{Illegal U-Turn}
+\section{Evidence Generation and System Outputs}
+\section{Performance Evaluation}
+\subsection{Object Detection Metrics}
+\subsection{Tracking Metrics}
+\section{Experimental Design}
+\subsection{Ablation on Fuzzy Logic Layer}
+\subsection{Robustness Across Traffic Density and Lighting}
+\section{Implementation Tools and Environment}
+\section{Ethical and Practical Considerations}
+
+\printbibliography
+
+\end{document}
