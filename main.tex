@@ -53,10 +53,14 @@
   \textbf{Permission is given for the following people to have access to this thesis:}\par
   \vspace{1em}
   \begin{center}
-    \begin{tabular}{cc}
+    \begin{tabular}{|l|c|}
+      \hline
       Available to the general public & Yes \\
+      \hline
       \textbf{Available only after consultation with the author or thesis adviser} & \textbf{Yes} \\
+      \hline
       \textbf{Available to those bound by a confidentiality agreement} & \textbf{Yes} \\
+      \hline
     \end{tabular}
   \end{center}
   \vspace{1.5em}
@@ -183,39 +187,180 @@ Additionally, many implementations support modular extensions like license plate
 
 \chapter{METHODOLOGY}
 \section{Research Design}
+This study uses a design-and-development research approach to build and evaluate an AI-driven traffic violation detection pipeline for fixed roadside Closed-Circuit Television (CCTV) video in the Philippine setting. The methodology follows a modular computer vision pipeline---vehicle detection, Multi-Object Tracking (MOT), camera-to-road calibration, metric speed estimation, and rule-based violation inference---so that each module can be tested independently and improved without changing the overall system behavior \parencite{FernandezLlorca2021,RevaudHumenberger2021}. Because enforcement-oriented outputs require interpretable, auditable decisions, violations are inferred primarily through geometric constraints and temporal logic applied to tracked trajectories rather than end-to-end action recognition \parencite{FernandezLlorca2021}.
+
+The study focuses on five violations observable from a single fixed camera view: (1) lane misuse (e.g., vehicle-type restricted lanes such as bus lanes), (2) no-stopping/loading-zone violations (vehicles stopping within prohibited polygons beyond a time threshold), (3) wrong-way driving/counterflowing, (4) illegal U-turns, and (5) speeding. The system is intended for urban arterial contexts where motorcycles comprise a large portion of registered vehicles in the Philippines; this affects detector stability and tracking association under occlusion and dense mixed traffic \parencite{Santiago2023}.
 \section{Study Setting and Camera Assumptions}
+The target deployment scenario is a fixed roadside CCTV camera with a static viewpoint, typical of traffic monitoring installations. The approach assumes: (a) the camera is stationary during recording, (b) the road segment relevant to measurement is approximately planar, and (c) violations occur within a user-defined Region of Interest (ROI) that is manually calibrated once per camera view \parencite{FernandezLlorca2021,RevaudHumenberger2021}. The planar-road assumption is widely used for monocular speed estimation pipelines because it enables mapping image points to ground-plane metric coordinates via a homography transformation \parencite{Bell2020,RevaudHumenberger2021}.
 \section{Data Acquisition and Video Collection Plan}
 \subsection{Data Sources}
+The study will use two complementary data sources:
+
+\begin{enumerate}
+  \item \textbf{Official traffic footage (if provided):} The researcher has initiated a request to the Land Transportation Office (LTO) for sample CCTV footage. Since availability and usability are uncertain, these data are treated as optional for the initial development cycle.
+  \item \textbf{Researcher-captured roadside footage:} To ensure progress independent of agency timelines, the primary plan is to record videos from footbridges or elevated sidewalks using a stable camera (e.g., tripod or fixed mount). This approach is consistent with infrastructure-style fixed-camera assumptions required for monocular calibration and speed estimation \parencite{FernandezLlorca2021}.
+\end{enumerate}
 \subsection{Inclusion Criteria}
+Videos will be selected to satisfy: (a) visible lane markings or stable landmarks enabling manual calibration, (b) sufficient resolution to detect vehicle bounding boxes reliably, and (c) a camera view that captures vehicle motion for multiple frames \parencite{FernandezLlorca2021,RevaudHumenberger2021}.
 \subsection{Data Partitioning}
+To reduce leakage and overfitting to a single viewpoint, the dataset will be partitioned by location/time into development and evaluation subsets, with at least one held-out set recorded under different lighting/traffic density conditions \parencite{FernandezLlorca2021}.
 \section{System Overview}
+The proposed pipeline consists of the following stages:
+
+\begin{enumerate}
+  \item \textbf{Vehicle detection and classification} using a You Only Look Once (YOLO) family detector to obtain bounding boxes and class labels per frame.
+  \item \textbf{Multi-Object Tracking (MOT)} to assign stable track IDs and estimate per-vehicle trajectories over time.
+  \item \textbf{Manual geometric calibration}, including (a) homography via a ground-plane reference rectangle and (b) ROIs (polygons/lines) for lanes and prohibited zones.
+  \item \textbf{Metric speed estimation} by projecting a vehicle contact point to the ground plane and measuring displacement over time.
+  \item \textbf{Rule-based violation inference} using geometric constraints and temporal thresholds on tracked trajectories.
+  \item \textbf{Evidence packaging} (annotated frames, trajectory overlays, event timestamps, and computed measurements).
+\end{enumerate}
+
+This modular structure matches the common three-step framing of vision-based speed systems---detect, track, and convert pixel displacement to metric displacement---while keeping the violation logic transparent and adjustable for local rules \parencite{FernandezLlorca2021,RevaudHumenberger2021}.
 \section{Vehicle Detection and Classification}
+A YOLO-based detector will be used to localize vehicles per frame and assign coarse categories (e.g., motorcycle, car, bus, truck). Modern traffic pipelines favor deep detectors over handcrafted background subtraction because they are more robust to illumination changes and clutter \parencite{Bell2020,RevaudHumenberger2021}. Detector confidence scores will be retained to support downstream filtering and to inform association logic during tracking \parencite{RevaudHumenberger2021}.
+
+To mitigate detector inconsistency on locally prevalent vehicle types (e.g., frequent motorcycles in mixed traffic), the system will incorporate track-level label stabilization (Section 3.6.3) rather than relying on per-frame class labels alone \parencite{Santiago2023}.
 \section{Multi-Object Tracking and Fuzzy Logic Stabilization}
 \subsection{Baseline Tracker}
+The tracker will follow a tracking-by-detection paradigm: detections are linked frame-to-frame into trajectories using motion prediction and association costs. Contemporary MOT systems commonly combine a Kalman filter (KF) motion model with assignment algorithms and confidence handling to sustain identities under occlusion and missed detections \parencite{Bewley2016,Zhang2022}. In particular, ByteTrack's principle---leveraging both high- and low-confidence detections to recover objects that would otherwise be dropped---is aligned with CCTV conditions where detections can be noisy and small in the image \parencite{Zhang2022,RevaudHumenberger2021}.
 \subsection{Motivation for Fuzzy Logic in Association}
+Fixed-camera traffic scenes in the Philippines frequently exhibit dense mixed traffic where motorcycles, tricycles/three-wheelers, and tightly-packed vehicles can cause intermittent detections, identity switches, and unstable class predictions. Data association is a known failure point in MOT under occlusion and ambiguous observations \parencite{Rakai2022}. Fuzzy logic is suitable as an additional decision layer because it can combine multiple uncertain cues (e.g., distance, confidence, motion consistency) into a single association preference without requiring strict thresholds for every case \parencite{Zadeh1965,Rakai2022}.
 \subsection{Fuzzy-Enhanced Association and Class Stabilization}
+A fuzzy inference layer will be added to complement the baseline association score. For each candidate match between an existing track and a new detection, the system computes input features such as:
+
+\begin{itemize}
+  \item \textbf{IoU proximity:} overlap between predicted track box and detection box.
+  \item \textbf{Motion consistency:} difference between predicted position (KF) and observed detection.
+  \item \textbf{Detection confidence:} YOLO confidence for the candidate detection.
+  \item \textbf{Class consistency:} agreement between the track's historical dominant class and the detection's class.
+\end{itemize}
+
+These inputs are fuzzified into linguistic variables (e.g., low/medium/high) and combined through rules such as:
+
+\begin{itemize}
+  \item IF \textit{IoU is high} AND \textit{motion error is low} AND \textit{confidence is high} THEN \textit{match strength is very high}.
+  \item IF \textit{confidence is low} BUT \textit{motion error is low} AND \textit{IoU is medium/high} THEN \textit{match strength is medium} (supporting recovery under weak detections, consistent with using low-confidence detections in tracking) \parencite{Zhang2022}.
+  \item IF \textit{class consistency is low} AND \textit{confidence is low} THEN \textit{match strength is low} (reducing mis-association from noisy labels).
+\end{itemize}
+
+The defuzzified output produces a fuzzy match score, which is combined with the baseline cost to decide final assignments. Separately, the track's vehicle class is stabilized by maintaining a running distribution of observed classes over a temporal window and selecting the dominant class when confidence is sufficient, rather than switching labels frame-by-frame. This design addresses association uncertainty highlighted in MOT surveys while keeping the mechanism interpretable \parencite{Rakai2022,Zadeh1965}.
 \section{Manual Geometric Calibration}
 \subsection{ROI Definition}
+For each camera view, the following elements will be manually annotated on a reference frame:
+
+\begin{itemize}
+  \item Lane polygons (including restricted lanes such as bus lanes).
+  \item No-stopping/loading-zone polygon(s).
+  \item Direction reference vectors or lane-direction lines.
+  \item U-turn-related boundaries (e.g., median opening zone, prohibited turn line, or turning box).
+  \item Measurement ROI where speed is considered valid.
+\end{itemize}
+
+Manual ROI calibration is necessary because traffic rules are location-specific and because a single camera view may cover multiple regulatory zones \parencite{FernandezLlorca2021}.
 \subsection{Homography Calibration via Reference Rectangle}
+To convert pixel motion into metric motion, the system uses a homography mapping between the image plane and the road plane under the planar-road assumption \parencite{FernandezLlorca2021,RevaudHumenberger2021}. In this study, homography will be calibrated by selecting a reference rectangle on the road plane:
+
+\begin{enumerate}
+  \item The user selects four image points corresponding to the corners of a rectangle that lies on the road surface and aligns with the scene's 3D perspective (e.g., along lane markings or a rectangular patch measurable in the real world).
+  \item The real-world width and length of the rectangle are defined as fixed metric values (measured on-site when feasible, or derived from reliable map/engineering references when appropriate).
+  \item These four 2D--2D correspondences define the homography matrix $H$, which maps image coordinates to ground-plane coordinates.
+\end{enumerate}
+
+This approach matches standard monocular traffic pipelines where distance conversion relies on a road-plane homography and where calibration quality strongly influences speed accuracy \parencite{Bell2020,RevaudHumenberger2021}.
 \subsection{Ground-Contact Point Selection}
+For each vehicle detection, a representative ground-contact point is extracted from the bounding box (commonly the midpoint of the bottom edge) and projected through the homography into ground-plane coordinates. Using the bottom midpoint is consistent with traffic surveillance speed pipelines that treat the vehicle's contact with the road as the reference point for metric displacement \parencite{Bell2020,FernandezLlorca2021}.
 \section{Speed Estimation and Speeding Detection}
 \subsection{Instantaneous Speed Computation}
+For a tracked vehicle $i$, let $(x_t, y_t)$ be the projected ground-plane coordinate at frame time $t$. The instantaneous speed is computed as:
+
+\begin{equation}
+v_t = \frac{\sqrt{(x_t - x_{t-\Delta t})^2 + (y_t - y_{t-\Delta t})^2}}{\Delta t}
+\end{equation}
+
+where $\Delta t$ is the elapsed time between frames (derived from video frame rate). This formulation is consistent with vision-based infrastructure speed estimation pipelines that compute velocity from tracked displacements after pixel-to-meter conversion \parencite{FernandezLlorca2021}.
 \subsection{Temporal Smoothing}
+Because monocular estimation is sensitive to jitter from detection noise and calibration error, speed values will be smoothed using a rolling window (e.g., moving average or median filter) before violation decisions are made. Smoothing is commonly used to reduce perspective-induced fluctuations and detection noise in monocular speed estimation \parencite{Bell2020,FernandezLlorca2021}.
 \subsection{Speeding Event Rule}
+A speeding violation is triggered when the smoothed speed exceeds a configured speed limit for at least $N$ consecutive frames (or for a minimum duration in seconds), adding temporal persistence to reduce false positives from single-frame spikes. Speed limit values will be defined per site according to posted signage when available; otherwise, evaluation will focus on relative overspeed events using a researcher-defined threshold for experimental consistency, since enforcement-grade thresholds require jurisdiction-specific legal validation \parencite{FernandezLlorca2021}.
 \section{Geometric Rule-Based Violation Detection}
+All violation rules operate on (a) stabilized tracks, (b) ROIs calibrated for the camera view, and (c) temporal persistence to reduce false triggers from short occlusions. Each rule outputs an event record containing track ID, violation type, start/end timestamps, and supporting measurements.
+
 \subsection{Lane Misuse (Restricted Lane Violation)}
+A lane misuse event is detected when a vehicle track's ground-contact point enters a restricted lane polygon and the stabilized vehicle class is not permitted in that lane. To avoid false detections from boundary jitter, the system uses a buffer strategy: the vehicle must remain inside the polygon for at least $T$ seconds (or $N$ frames) before a violation is confirmed, and it must exit for a minimum persistence before clearing the state. Polygon-based lane reasoning is a standard geometric approach for lane rule enforcement from surveillance video when lane boundaries are known \parencite{FernandezLlorca2021}.
 \subsection{No-Stopping / Loading-Zone Violation}
+For no-stopping areas, the prohibited zone is calibrated as a polygon and combined with a time threshold, as follows:
+
+\begin{itemize}
+  \item \textbf{Zone condition:} the track's ground-contact point is inside the no-stopping/loading-zone polygon.
+  \item \textbf{Stop condition:} the vehicle's estimated speed is below a small threshold (near-zero) and the ground-plane displacement over a short window remains below a distance tolerance (to avoid labeling slow crawling as ``stopped'').
+  \item \textbf{Duration condition:} the stop condition persists for at least $T_{\mathrm{stop}}$ seconds.
+\end{itemize}
+
+If all conditions are satisfied, the vehicle is labeled as violating no-stopping/loading-zone rules. This formulation corresponds to the general principle that infrastructure video analytics can infer stopping behavior by combining temporal persistence and motion thresholds after tracking \parencite{FernandezLlorca2021}.
 \subsection{Wrong-Way Driving / Counterflow}
+Wrong-way driving is inferred by comparing the vehicle's motion direction to the allowed direction of travel within the relevant lane polygon. For a short trajectory window, the direction vector is computed from consecutive projected points and compared to a lane-direction reference vector using an angle or cosine similarity threshold. If the vehicle maintains an opposite direction beyond a persistence threshold, the system triggers a wrong-way event. Direction-based reasoning is commonly used in traffic surveillance analytics where lane direction is known and tracks provide a temporal motion signal \parencite{FernandezLlorca2021}.
 \subsection{Illegal U-Turn}
+Illegal U-turn detection is modeled as a trajectory-pattern violation within a configured turning region:
+
+\begin{enumerate}
+  \item A turning region (polygon) and one or more boundary lines are defined (e.g., median opening area, prohibited turning line).
+  \item A candidate U-turn is detected when a track exhibits a large heading reversal (e.g., direction change beyond a threshold) while being inside the turning region.
+  \item The U-turn is labeled illegal if the trajectory crosses a prohibited boundary or occurs inside a ``no U-turn'' region.
+\end{enumerate}
+
+Because U-turn geometry varies by site, this rule is explicitly designed as a configurable geometric template rather than a fixed learned action classifier, keeping the enforcement logic auditable and adaptable per intersection design \parencite{FernandezLlorca2021}.
 \section{Evidence Generation and System Outputs}
+For each confirmed violation event, the system generates:
+
+\begin{itemize}
+  \item \textbf{Event metadata:} violation type, track ID, timestamps, zone/lane ID, and confidence indicators.
+  \item \textbf{Annotated visual evidence:} frames with bounding boxes, track IDs, and violation labels.
+  \item \textbf{Trajectory overlays:} projected track path relative to polygons/lines to support interpretability.
+  \item \textbf{Computed measurements:} speed values for speeding events; stop duration for no-stopping violations; direction angle for wrong-way events.
+\end{itemize}
+
+Video-based enforcement systems typically require outputs that are interpretable by human reviewers; thus, the study prioritizes evidence packaging suitable for manual validation, even if final adjudication remains outside the system scope \parencite{FernandezLlorca2021}.
 \section{Performance Evaluation}
 \subsection{Object Detection Metrics}
+Detection quality will be assessed using Precision, Recall, and mean Average Precision (mAP) on a labeled subset of frames. Detector stability matters because downstream tracking and rule inference depend on consistent localization \parencite{RevaudHumenberger2021}.
 \subsection{Tracking Metrics}
+Tracking performance will be evaluated using standard MOT metrics such as Multiple Object Tracking Accuracy (MOTA), Multiple Object Tracking Precision (MOTP), and identity-based measures (e.g., IDF1), which quantify identity switches and continuity \parencite{BernardinStiefelhagen2008}. These metrics are widely used for comparing tracking systems under occlusion and crowded scenes \parencite{BernardinStiefelhagen2008,Rakai2022}.
+\subsection{Violation Detection Metrics}
+Violation detection will be evaluated at the event level using Precision, Recall, and F1-score:
+
+\begin{itemize}
+  \item \textbf{True Positive (TP):} a detected event matches a ground-truth event for the same vehicle within a defined time tolerance.
+  \item \textbf{False Positive (FP):} a detected event without a matching ground-truth event.
+  \item \textbf{False Negative (FN):} a ground-truth event not detected.
+\end{itemize}
+
+This event-based evaluation is appropriate because the goal is not merely frame-level classification but correct detection of temporally extended behaviors \parencite{FernandezLlorca2021}.
 \section{Experimental Design}
 \subsection{Ablation on Fuzzy Logic Layer}
+To test the contribution of fuzzy logic stabilization, experiments will compare:
+
+\begin{itemize}
+  \item \textbf{Baseline MOT:} tracking-by-detection without fuzzy association refinement.
+  \item \textbf{Fuzzy-enhanced MOT:} baseline MOT + fuzzy match scoring + track-level class stabilization.
+\end{itemize}
+
+Outcomes will be compared in terms of ID switches, fragmented tracks, and downstream violation precision/recall, reflecting the dependency of geometric rules on stable trajectories \parencite{Rakai2022}.
 \subsection{Robustness Across Traffic Density and Lighting}
+Evaluation subsets will include (when available) daytime and nighttime scenes and both light and congested traffic. CCTV footage quality is a known limiting factor for monocular speed estimation and tracking, especially when vehicles appear small and blurry; robustness testing under these conditions is therefore necessary \parencite{RevaudHumenberger2021}.
 \section{Implementation Tools and Environment}
+The prototype will be implemented using Python-based computer vision libraries. Core components include:
+
+\begin{itemize}
+  \item A YOLO-family detector for per-frame vehicle detection/classification.
+  \item A tracking-by-detection MOT module (e.g., KF + association; optionally ByteTrack-style confidence handling).
+  \item Manual annotation utilities for polygon/line calibration.
+  \item A rule engine that consumes tracks and emits violation events and evidence artifacts.
+\end{itemize}
+
+This implementation aligns with the dominant tooling ecosystem for traffic surveillance research and enables reproducibility and iterative calibration updates \parencite{FernandezLlorca2021,Zhang2022}.
 \section{Ethical and Practical Considerations}
+The study emphasizes traffic-rule inference from vehicle trajectories and does not require identifying drivers or passengers. Nonetheless, video collection will avoid unnecessary capture of private spaces, and data will be stored securely with access restricted to research purposes. Any deployment claims are limited to research prototyping; enforcement-grade usage would require agency validation, calibration certification, and alignment with local legal processes for citations and evidentiary standards \parencite{FernandezLlorca2021}.
 
 \printbibliography
 
