@@ -164,14 +164,3 @@
 * No undefined acronyms.
 * No long paragraphs that mix multiple unrelated points.
 * References are complete and consistent.
-
----
-
-## Optional Phase 6 (Advisor-ready packaging)
-    
-**Goal:** Make it submission-ready.
-
-### Tasks
-
-* Add a one-page **“Study Overview”** at the end of Chapter 1 (diagram + brief narrative).
-* Add a one-page **“Evaluation Plan Summary”** at the end of Chapter 3 (metrics + ablations + expected outputs).

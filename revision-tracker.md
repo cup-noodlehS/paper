@@ -6,7 +6,7 @@ This file tracks revisions applied to `main.tex` and `refs.bib` according to `re
 
 ### Core argument chain (backbone paragraph)
 
-In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehension Policy (NCAP) relies on video evidence to scale monitoring and documentation of traffic violations \parencite{MMDA2022}. However, dense mixed traffic and frequent occlusions in real-world scenes lead to inconsistent detections and unstable multi-object tracks \parencite{Wen2020,Zhang2022}. Distribution shift between widely used training datasets and local road environments further exacerbates detection inconsistency, increasing identity switches and fragmented trajectories \parencite{Koh2021,TorralbaEfros2011}. Because geometric, lane-, and region-based violation rules depend on temporally stable trajectories, tracking instability directly undermines the reliability and auditability of inferred violations \parencite{Olugbade2022,Rathore2021}. This study therefore develops an automated traffic violation detection (ATVD) pipeline that couples real-time vehicle detection with multi-object tracking (MOT) and explicitly handles uncertainty during association and class stabilization using fuzzy logic \parencite{Zadeh1965,Fakhri2023}. Stable trajectories are then evaluated with calibrated geometric rules to infer a defined set of violations within a fixed camera view \parencite{Bell2020,RevaudHumenberger2021}. The system outputs evidence bundles (e.g., annotated frames, timestamps, track identifiers, and rule-trigger traces) intended for human review and verification in camera-based enforcement workflows \parencite{MMDA2022,Olugbade2022}.
+In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehension Policy (NCAP) relies on video evidence to scale monitoring and documentation of traffic violations \parencite{MMDA2022}. However, dense mixed traffic and frequent occlusions in real-world scenes lead to inconsistent detections and unstable multi-object tracks \parencite{Wen2020,Zhang2022}. Distribution shift between widely used training datasets and local road environments further exacerbates detection inconsistency, increasing identity switches and fragmented trajectories \parencite{Koh2021,TorralbaEfros2011}. Because geometric, lane-, and region-based violation rules depend on temporally stable trajectories, tracking instability directly undermines the reliability and auditability of inferred violations \parencite{Olugbade2022,Rathore2021}. This study therefore develops an automated traffic violation detection (ATVD) pipeline that couples real-time vehicle detection with multi-object tracking (MOT) and explicitly handles uncertainty during association and class stabilization using fuzzy logic \parencite{Zadeh1965,Zhan2018FuzzyDA}. Stable trajectories are then evaluated with calibrated geometric rules to infer a defined set of violations within a fixed camera view \parencite{Bell2020,RevaudHumenberger2021}. The system outputs evidence bundles (e.g., annotated frames, timestamps, track identifiers, and rule-trigger traces) intended for human review and verification in camera-based enforcement workflows \parencite{MMDA2022,Olugbade2022}.
 
 ### Changes applied in `main.tex`
 
@@ -59,3 +59,29 @@ In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehe
 ### Changes applied in `refs.bib`
 
 - No changes required in this phase.
+
+## Phase 5 — Academic writing pass + APA audit (“Polish and standardize”)
+
+### Changes applied in `main.tex`
+
+- Performed paragraph surgery on Chapter 1 to ensure clearer topic--evidence--link flow (notably Rationale, Theoretical Framework, Scope/Delimitation, and Significance).
+- Standardized term usage and acronym handling across Chapters 1--3 (consistent use of ATVD, MOT, YOLO, CCTV, NCAP, ROI; removed repeated expansions and converted key definition headwords to acronym-first style).
+- Defined and sourced IDF1 as an identity-based tracking metric and aligned tracking-metric attribution with the appropriate sources (`Ristani2016` for IDF1; `BernardinStiefelhagen2008` for CLEAR MOT metrics).
+- Replaced the previously used fuzzy-tracking citation (`Fakhri2023`, identified as retracted) with an IEEE conference source for fuzzy data association in MOT (`Zhan2018FuzzyDA`) and updated in-text citations accordingly.
+
+### Changes applied in `refs.bib`
+
+- Completed an APA/consistency audit: `refs.bib` now contains exactly the set of references cited in `main.tex` (27 entries), with no unused entries.
+- Added missing/required entries for Phase 5 (`Ristani2016`, `Zhan2018FuzzyDA`) and removed the retracted `Fakhri2023` entry.
+- Improved reference completeness by adding/correcting DOI/URL metadata for key sources (e.g., `BernardinStiefelhagen2008`, `Rakai2022`, `Zadeh1965`) and correcting the author list for `Rakai2022` to match its DOI metadata.
+
+### Preferred term glossary (Phase 5)
+
+- **ATVD**: automated traffic violation detection
+- **MOT**: multi-object tracking
+- **YOLO**: You Only Look Once (YOLO family detector)
+- **CCTV**: closed-circuit television
+- **NCAP**: No-Contact Apprehension Policy
+- **ROI**: region of interest
+- **IoU**: intersection over union
+- **IDF1**: identification F1 score (identity-based MOT metric)
