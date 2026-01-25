@@ -68,12 +68,13 @@ In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehe
 - Standardized term usage and acronym handling across Chapters 1--3 (consistent use of ATVD, MOT, YOLO, CCTV, NCAP, ROI; removed repeated expansions and converted key definition headwords to acronym-first style).
 - Defined and sourced IDF1 as an identity-based tracking metric and aligned tracking-metric attribution with the appropriate sources (`Ristani2016` for IDF1; `BernardinStiefelhagen2008` for CLEAR MOT metrics).
 - Replaced the previously used fuzzy-tracking citation (`Fakhri2023`, identified as retracted) with an IEEE conference source for fuzzy data association in MOT (`Zhan2018FuzzyDA`) and updated in-text citations accordingly.
+- Addressed `revision-review.md` issues: fixed citation--claim mismatches (removed a mismatched helmet/seatbelt citation, replaced a non-technical occlusion citation, and corrected ByteTrack-related attribution), adopted Option A for speed events (overspeed events vs posted-limit speeding), clarified detector plan (pre-trained YOLOv3 on COCO; no fine-tuning; four vehicle classes), and added explicit privacy citations in Chapter 3 ethics.
 
 ### Changes applied in `refs.bib`
 
 - Completed an APA/consistency audit: `refs.bib` now contains exactly the set of references cited in `main.tex` (27 entries), with no unused entries.
-- Added missing/required entries for Phase 5 (`Ristani2016`, `Zhan2018FuzzyDA`) and removed the retracted `Fakhri2023` entry.
-- Improved reference completeness by adding/correcting DOI/URL metadata for key sources (e.g., `BernardinStiefelhagen2008`, `Rakai2022`, `Zadeh1965`) and correcting the author list for `Rakai2022` to match its DOI metadata.
+- Added missing/required entries for Phase 5 (`Ristani2016`, `Zhan2018FuzzyDA`, `Lin2014COCO`) and removed entries that are no longer cited (including the retracted `Fakhri2023` and `Santiago2023`).
+- Improved reference completeness by adding/correcting DOI/URL metadata for key sources (e.g., `BernardinStiefelhagen2008`, `Rakai2022`, `Zadeh1965`) and ensuring canonical publisher/OpenAccess links (e.g., `RevaudHumenberger2021`).
 
 ### Preferred term glossary (Phase 5)
 
