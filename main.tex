@@ -209,6 +209,35 @@ The study will use two complementary data sources:
 Videos will be selected to satisfy: (a) visible lane markings or stable landmarks enabling manual calibration, (b) sufficient resolution to detect vehicle bounding boxes reliably, and (c) a camera view that captures vehicle motion for multiple frames \parencite{FernandezLlorca2021,RevaudHumenberger2021}.
 \subsection{Data Partitioning}
 To reduce leakage and overfitting to a single viewpoint, the dataset will be partitioned by location/time into development and evaluation subsets, with at least one held-out set recorded under different lighting/traffic density conditions \parencite{FernandezLlorca2021}.
+\section{Ground-Truth Annotation Protocol}
+To enable reproducible evaluation of detection, tracking, and event-level violation inference, the study will produce ground-truth annotations from the collected videos. Ground truth is required for computing standard multi-object tracking (MOT) and event-level metrics \parencite{BernardinStiefelhagen2008,FernandezLlorca2021}.
+
+\subsection{Annotation Targets and Label Schema}
+Annotations will be produced by the researcher (primary annotator) using an annotation tool that supports video timelines, bounding boxes, and track identifiers. A second trained annotator will be involved for quality checks on a subset of the data (quality control subsection).
+
+The annotation outputs include:
+
+\begin{itemize}
+  \item \textbf{Frame-level detection labels:} vehicle bounding boxes and coarse vehicle class labels on sampled frames (used for Precision/Recall/mAP).
+  \item \textbf{Track-level labels:} consistent track identifiers linked across frames for selected video segments, with per-frame bounding boxes (used for MOT metrics such as MOTA/MOTP and IDF1).
+  \item \textbf{Event-level violation labels:} start/end timestamps for each of the five violations, linked to the corresponding ground-truth track ID (used for event-level Precision/Recall/F1).
+\end{itemize}
+
+Vehicle classes will be annotated using a fixed label set consistent with the study scope: \textit{motorcycle}, \textit{car}, \textit{bus}, \textit{truck}, and \textit{other}. If the detector uses a different taxonomy, its outputs will be mapped to this set for evaluation consistency.
+
+\subsection{Event Boundary Definitions}
+Violation events will be annotated with explicit temporal boundaries using the same ROI geometry (lane polygons, zones, and reference lines) defined for the camera view. Each event record includes: violation type, track ID, and start/end timestamps. Event boundaries are defined as follows:
+
+\begin{itemize}
+  \item \textbf{Lane misuse:} start when the track's ground-contact point first enters the restricted lane polygon; end when it exits the polygon.
+  \item \textbf{No-stopping/loading-zone:} start when the vehicle becomes stationary inside the no-stopping/loading-zone polygon; end when it resumes motion or exits the polygon.
+  \item \textbf{Wrong-way/counterflow:} start when the vehicle's motion direction becomes opposite to the lane-direction reference within the relevant ROI; end when the direction becomes compliant or the track leaves the ROI.
+  \item \textbf{Illegal U-turn:} start when a vehicle initiates a U-turn maneuver inside the configured turning region (heading reversal begins); end when the maneuver completes or the vehicle exits the turning region.
+  \item \textbf{Speeding:} start when the estimated speed exceeds the configured threshold for a sustained duration; end when it falls below the threshold for a sustained duration.
+\end{itemize}
+
+\subsection{Quality Control and Consistency Checks}
+To reduce annotation noise, a subset of the labeled data will be independently annotated by a second annotator. Agreement checks will include class-label agreement and spatial overlap agreement for bounding boxes (e.g., IoU-based consistency) and temporal agreement for event boundaries within a defined tolerance. Disagreements will be resolved through adjudication, and the finalized guidelines will be used to update annotations when systematic ambiguities are identified.
 \section{System Overview}
 The proposed pipeline consists of the following stages:
 
@@ -225,7 +254,7 @@ This modular structure matches the common three-step framing of vision-based spe
 \section{Vehicle Detection and Classification}
 A YOLO-based detector will be used to localize vehicles per frame and assign coarse categories (e.g., motorcycle, car, bus, truck). Modern traffic pipelines favor deep detectors over handcrafted background subtraction because they are more robust to illumination changes and clutter \parencite{Bell2020,RevaudHumenberger2021}. Detector confidence scores will be retained to support downstream filtering and to inform association logic during tracking \parencite{RevaudHumenberger2021}.
 
-To mitigate detector inconsistency on locally prevalent vehicle types (e.g., frequent motorcycles in mixed traffic), the system will incorporate track-level label stabilization (Section 3.6.3) rather than relying on per-frame class labels alone \parencite{Santiago2023}.
+To mitigate detector inconsistency on locally prevalent vehicle types (e.g., frequent motorcycles in mixed traffic), the system will incorporate track-level label stabilization (fuzzy-enhanced association and class stabilization) rather than relying on per-frame class labels alone \parencite{Santiago2023}.
 \section{Multi-Object Tracking and Fuzzy Logic Stabilization}
 \subsection{Baseline Tracker}
 The tracker will follow a tracking-by-detection paradigm: detections are linked frame-to-frame into trajectories using motion prediction and association costs. Contemporary MOT systems commonly combine a Kalman filter (KF) motion model with assignment algorithms and confidence handling to sustain identities under occlusion and missed detections \parencite{Bewley2016,Zhang2022}. In particular, ByteTrack's principle---leveraging both high- and low-confidence detections to recover objects that would otherwise be dropped---is aligned with CCTV conditions where detections can be noisy and small in the image \parencite{Zhang2022,RevaudHumenberger2021}.
@@ -249,8 +278,23 @@ These inputs are fuzzified into linguistic variables (e.g., low/medium/high) and
   \item IF \textit{class consistency is low} AND \textit{confidence is low} THEN \textit{match strength is low} (reducing mis-association from noisy labels).
 \end{itemize}
 
+The fuzzy association module is implemented as a Mamdani-type fuzzy inference system with triangular and/or trapezoidal membership functions for interpretability and computational simplicity \parencite{Zadeh1965}. Inputs are normalized to comparable ranges (e.g., IoU and confidence in $[0,1]$, and motion error normalized by the predicted box scale). Rule evaluation uses standard min--max composition (min for conjunction and max for aggregation), and the final fuzzy match strength is obtained using centroid defuzzification \parencite{Zadeh1965,Fakhri2023}. Membership parameters (e.g., breakpoints for low/medium/high) and the weighting between the fuzzy score and the baseline association cost are treated as hyperparameters and selected on a development subset to reduce identity switches while maintaining track continuity \parencite{Rakai2022,Zhang2022}.
+
 The defuzzified output produces a fuzzy match score, which is combined with the baseline cost to decide final assignments. Separately, the track's vehicle class is stabilized by maintaining a running distribution of observed classes over a temporal window and selecting the dominant class when confidence is sufficient, rather than switching labels frame-by-frame. This design addresses association uncertainty highlighted in MOT surveys while keeping the mechanism interpretable \parencite{Rakai2022,Zadeh1965}.
 \section{Manual Geometric Calibration}
+\subsection{Calibration Protocol Checklist (Per Camera)}
+Because monocular measurement depends on camera geometry, each camera view will be calibrated and documented using a consistent checklist. For each camera (or each distinct viewpoint), the researcher will:
+
+\begin{enumerate}
+  \item Select a clear reference frame and assign a camera-view identifier (location, date/time, and viewpoint notes).
+  \item Define and save the ROIs needed for rule inference (lanes, restricted zones, stop zones, direction lines, and turning regions) (ROI definition).
+  \item Identify at least one on-road reference measurement that can be physically measured in meters (e.g., a marked distance on the pavement or a rectangular region aligned with lane markings) and record the measurement procedure.
+  \item Estimate the image-to-road homography using the measured reference geometry and store the resulting transformation parameters (homography calibration) \parencite{HartleyZisserman2004}.
+  \item Validate calibration by projecting additional reference distances (if available) and checking that projected measurements are consistent with on-site measurements; calibration notes and any observed residual error will be reported.
+  \item Fix the ground-contact point definition used for projecting detections to the road plane (ground-contact point selection) and apply the same convention consistently across all evaluations.
+\end{enumerate}
+
+If the camera viewpoint changes (e.g., the camera is moved or zoomed), ROIs and homography are recalibrated and recorded as a new camera view.
 \subsection{ROI Definition}
 For each camera view, the following elements will be manually annotated on a reference frame:
 
@@ -324,6 +368,39 @@ For each confirmed violation event, the system generates:
   \item \textbf{Trajectory overlays:} projected track path relative to polygons/lines to support interpretability.
   \item \textbf{Computed measurements:} speed values for speeding events; stop duration for no-stopping violations; direction angle for wrong-way events.
 \end{itemize}
+
+Table~\ref{tab:evidence-bundle} defines the minimum evidence bundle required per violation type to support review and verification. The bundle is designed to be non-identifying (i.e., focused on vehicle tracks and scene geometry rather than personal attributes) and consistent with the study scope.
+
+\begin{table}[h]
+  \centering
+  \caption{Minimum evidence bundle per violation type.}
+  \label{tab:evidence-bundle}
+  \begin{tabular}{p{1.35in} p{2.55in} p{2.25in}}
+    \toprule
+    \textbf{Violation} & \textbf{Minimum visual evidence} & \textbf{Rule trace / measurements} \\
+    \midrule
+    Lane misuse (restricted lane) &
+    Key frame(s) showing the vehicle inside the restricted-lane polygon with bounding box and track ID; trajectory overlay relative to the lane polygon &
+    Entry/exit timestamps; stabilized vehicle class; dwell time inside polygon \\
+    \midrule
+    No-stopping / loading-zone &
+    Frames showing (a) entry into the zone, (b) stationary period, and (c) exit; trajectory overlay relative to the zone polygon &
+    Stop duration; near-zero speed/low-displacement trace during the stop interval \\
+    \midrule
+    Wrong-way / counterflow &
+    Consecutive frames showing movement direction within the relevant lane ROI; trajectory segment overlay with lane-direction reference &
+    Direction comparison value (e.g., angle or cosine similarity) over the trigger window; start/end timestamps \\
+    \midrule
+    Illegal U-turn &
+    Frames showing the turning maneuver within the configured turning region; trajectory overlay relative to turning region and prohibited boundary lines &
+    Heading reversal indicator; boundary-crossing record (if applicable); start/end timestamps \\
+    \midrule
+    Speeding &
+    Frames within the measurement ROI with track ID; trajectory overlay in the ground-plane view (when available) &
+    Smoothed speed trace over the event; threshold used (posted limit or experimental threshold); start/end timestamps \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 Video-based enforcement systems typically require outputs that are interpretable by human reviewers; thus, the study prioritizes evidence packaging suitable for manual validation, even if final adjudication remains outside the system scope \parencite{FernandezLlorca2021}.
 \section{Performance Evaluation}

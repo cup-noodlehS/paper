@@ -46,3 +46,16 @@ In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehe
 ### Changes applied in `refs.bib`
 
 - Added primary Philippine privacy sources: `RA10173` and `NPCCircular2024CCTV` in `refs.bib:160`.
+
+## Phase 4 — Methodology defensibility upgrade (“Make Chapter 3 reproducible”)
+
+### Changes applied in `main.tex`
+
+- Added a ground-truth annotation protocol (who annotates, label schema, event-boundary definitions, and quality-control checks) in `main.tex:212`.
+- Specified the fuzzy inference design at a reproducible level (membership function types, Mamdani inference, centroid defuzzification, and tuning approach) in `main.tex:281`.
+- Added a per-camera calibration protocol checklist (ROIs → reference measurements → homography → validation → ground-contact convention) in `main.tex:285`.
+- Defined a minimum evidence bundle per violation type (table) to standardize outputs for review in `main.tex:377`.
+
+### Changes applied in `refs.bib`
+
+- No changes required in this phase.
