@@ -34,3 +34,15 @@ In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehe
 - Scope/Delimitation updated to explicitly list the five evaluated violations and clarify non-goals (no LPR, no identity inference, no adjudication/citation issuance).
 - Chapter 3 experimental design updated with a detector-threshold sensitivity experiment to support RQ1.
 - Removed citation-dumping in Chapter 1 Rationale by splitting multi-citation claims into attributed sentences.
+
+## Phase 3 — Chapter 2 tightening (“Remove padding, strengthen justification”)
+
+### Changes applied in `main.tex`
+
+- Condensed Chapter 2 to focus on the study pipeline (ATVD → detection → MOT → uncertainty/fuzzy → geometric inference → calibration/speed) and removed off-scope tangents (e.g., LPR and unrelated edge/attention claims) in `main.tex:163`.
+- Added an explicit “Implication for this study:” sentence at the end of each Chapter 2 section to make design justification traceable to Chapter 3 implementation and evaluation.
+- Strengthened governance/privacy grounding by citing the Data Privacy Act of 2012 and NPC CCTV guidance in `main.tex:164`.
+
+### Changes applied in `refs.bib`
+
+- Added primary Philippine privacy sources: `RA10173` and `NPCCircular2024CCTV` in `refs.bib:160`.
