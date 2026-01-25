@@ -20,3 +20,17 @@ In Philippine urban roads, CCTV-based enforcement such as the No-Contact Apprehe
 
 - Reduce Research Questions to 3–4 measurable RQs and map Objectives 1:1.
 - Update Scope/Delimitations to explicitly list the five violations used in Chapter 3 and add non-goals (e.g., LPR, adjudication).
+
+## Phase 2 — Research alignment cleanup (“Make promises match methods”)
+
+### Changes applied in `main.tex`
+
+- Research Questions reduced to 3 measurable RQs aligned to Chapter 3 metrics:
+  - RQ1 detector operating point → tracking stability
+  - RQ2 fuzzy-enhanced MOT vs baseline → ID stability metrics
+  - RQ3 event-level violation accuracy → precision/recall/F1 per violation
+- Objectives rewritten to map 1:1 to the 3 RQs (no extra objectives).
+- Added a Chapter 1 construct-to-metric preview (detection, tracking, event-level violation metrics).
+- Scope/Delimitation updated to explicitly list the five evaluated violations and clarify non-goals (no LPR, no identity inference, no adjudication/citation issuance).
+- Chapter 3 experimental design updated with a detector-threshold sensitivity experiment to support RQ1.
+- Removed citation-dumping in Chapter 1 Rationale by splitting multi-citation claims into attributed sentences.
