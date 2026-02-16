@@ -76,11 +76,11 @@
 
 \chapter{THE PROBLEM AND ITS SCOPE}
 \section{Rationale}
-Road traffic injuries remain a major public-safety concern, causing about 1.19 million deaths globally each year, with the burden falling disproportionately on low- and middle-income countries where most road fatalities occur \parencite{WHO2023Road}. In the Philippines, road crashes continue to impose substantial losses, with the WHO estimating 11,062 road traffic fatalities in 2021 \parencite{WHO2023PH}. Strengthening compliance with traffic laws is therefore a practical lever for improving road safety, but fully manual enforcement is difficult to scale consistently across dense urban road networks \parencite{Olugbade2022}.
+Road traffic injuries remain a major public-safety concern, causing about 1.19 million deaths globally each year, with the burden falling disproportionately on low- and middle-income countries \parencite{WHO2023Road}. In the Philippines, road crashes continue to impose substantial losses, with the WHO estimating 11,062 road traffic fatalities in 2021 \parencite{WHO2023PH}. Strengthening compliance with traffic laws is therefore a practical lever for improving road safety, but fully manual enforcement is difficult to scale consistently across dense urban road networks \parencite{Olugbade2022}.
 
 As a response, jurisdictions increasingly use camera-based enforcement and video analytics, as reflected locally by the No-Contact Apprehension Policy (NCAP) that relies on recorded visual evidence for apprehension and adjudication \parencite{MMDA2022}. For such systems, the credibility of inferred events depends on stable detection and identity continuity, because many observable violations are defined by where and how a vehicle moves within a scene \parencite{Olugbade2022,Rathore2021}.
 
-However, real-world deployments face persistent technical issues---such as congestion, occlusion, viewpoint changes, and illumination variability---that degrade detection and tracking in traffic scenes \parencite{Wen2020}. Dataset bias and distribution shift further reduce model reliability when deployment conditions differ from training data \parencite{TorralbaEfros2011,Koh2021}. In traffic surveillance, these inconsistencies propagate into tracking instability and identity switches in multi-object tracking (MOT), undermining trajectory-based violation reasoning \parencite{Wen2020,Zhang2022}.
+However, real-world deployments face persistent technical issues, such as congestion, occlusion, viewpoint changes, and illumination variability, that degrade detection and tracking in traffic scenes \parencite{Wen2020}. Dataset bias and distribution shift further reduce model reliability when deployment conditions differ from training data \parencite{TorralbaEfros2011,Koh2021}. In traffic surveillance, these inconsistencies propagate into tracking instability and identity switches in multi-object tracking (MOT), undermining trajectory-based violation reasoning \parencite{Wen2020,Zhang2022}.
 
 Accordingly, this study investigates a modular pipeline that uses MOT to support trajectory-based inference and applies interpretable geometric rules for reviewable violation decisions \parencite{Olugbade2022,Rathore2021}. The study further incorporates fuzzy logic as an explicit mechanism for handling uncertainty during association and class stabilization \parencite{Zadeh1965,Zhan2018FuzzyDA}.
 \section{Research Gap}
@@ -110,7 +110,7 @@ To operationalize these objectives, the study uses the following construct-to-me
 
 \begin{itemize}
   \item \textbf{Detection quality:} Precision, Recall, and mean Average Precision (mAP).
-  \item \textbf{Tracking stability:} Multiple Object Tracking Accuracy/Precision (MOTA/MOTP) \parencite{BernardinStiefelhagen2008} and identity-based measures such as identification F1 score (IDF1) and ID switches \parencite{Ristani2016}.
+  \item \textbf{Tracking stability:} Multiple Object Tracking Accuracy/Precision (MOTA/MOTP) \parencite{BernardinStiefelhagen2008} and measures, particularly identification F1 score (IDF1) and ID switches \parencite{Ristani2016}.
   \item \textbf{Violation inference accuracy:} Event-level Precision, Recall, and F1-score computed per violation type \parencite{FernandezLlorca2021}.
 \end{itemize}
 \section{Theoretical Framework}
@@ -136,7 +136,7 @@ This study is significant because road traffic injury remains a major public saf
 
 For Philippine-focused deployment, the study contributes a pipeline that explicitly addresses distribution shift and its potential impact on detector consistency, tracking stability, and the reliability of rule-based violation inference \parencite{Koh2021,TorralbaEfros2011}. By integrating fuzzy logic into MOT, the study operationalizes an interpretable uncertainty-handling mechanism intended to stabilize association and class decisions under ambiguous observations \parencite{Zadeh1965,Zhan2018FuzzyDA}.
 
-For traffic management stakeholders, the outputs of this work are structured as evidence bundles (e.g., annotated frames, trajectories, and rule-trigger traces) intended for human review rather than automated adjudication \parencite{MMDA2022,Olugbade2022}. For researchers, the study provides a reproducible methodology---including an annotation protocol, calibration checklist, and specified rule logic---to support comparative evaluation of tracking and geometric-rule violation inference in fixed-camera settings \parencite{FernandezLlorca2021}.
+For traffic management stakeholders, the outputs of this work are structured as evidence bundles (e.g., annotated frames, trajectories, and rule-trigger traces) intended for human review rather than automated adjudication \parencite{MMDA2022,Olugbade2022}. For researchers, the study provides a reproducible methodology, including an annotation protocol, calibration checklist, and specified rule logic, to support comparative evaluation of tracking and geometric-rule violation inference in fixed-camera settings \parencite{FernandezLlorca2021}.
 \section{Definition of Terms}
 For clarity and consistency, the following terms are defined as they are used in this study.
 
